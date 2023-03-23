@@ -75,6 +75,10 @@ public class UdapClientService {
             log.error("Default JwkSet not loaded", e.getMessage());
         }
     }
+    
+    public UdapFhirClient getDefaultClient() {
+    	return defaultClient;
+    }
 
     /**
      * Registers the default UDAP client at the given authorization server. Also performs
