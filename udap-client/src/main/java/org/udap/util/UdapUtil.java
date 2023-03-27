@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -508,13 +507,7 @@ public final class UdapUtil {
             .toEntity(RegistrationResponse.class)
             .block(Duration.ofMinutes(2));
 
-        HttpStatusCode statusCode = HttpStatus.CONFLICT;
-
-        if (response != null) {
-            statusCode = response.getStatusCode();
-        }
-
-        if (statusCode == HttpStatus.CREATED || statusCode == HttpStatus.OK || statusCode == HttpStatus.ACCEPTED) {
+        if (response != null && response.getStatusCode().is2xxSuccessful()) {
             return response.getBody();
         }
 
