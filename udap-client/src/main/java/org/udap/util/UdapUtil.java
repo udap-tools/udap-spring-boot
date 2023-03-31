@@ -12,11 +12,12 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -100,10 +101,11 @@ public final class UdapUtil {
      * @throws CertificateParsingException
      */
     public static String getSubjectAlternativeName(X509Certificate x509Certificate) throws CertificateParsingException {
-        var sanExtension = x509Certificate.getSubjectAlternativeNames().stream().findFirst();
+    	// TODO: Need to harden / refine
+        Optional<List<?>> sanExtension = x509Certificate.getSubjectAlternativeNames().stream().findFirst();
 
         if (sanExtension.isPresent()) {
-            var sanEntry = sanExtension.get();
+            List<?> sanEntry = sanExtension.get();
             return sanEntry.get(1 /* 2nd element */).toString();
         }
 
@@ -148,7 +150,7 @@ public final class UdapUtil {
         // passed
         final String jti = UUID.randomUUID().toString();
 
-        final var claimsSetBuilder = new JWTClaimsSet.Builder().issuer(iss)
+        final JWTClaimsSet.Builder claimsSetBuilder = new JWTClaimsSet.Builder().issuer(iss)
             .subject(sub)
             // The Authorization Server's "registration URL" (the same URL to which the
             // registration request will be posted)
@@ -240,12 +242,6 @@ public final class UdapUtil {
      */
     public static Builder createAuthNToken(final UdapFhirClient fhirClient, final String audience)
             throws IOException, CertificateParsingException {
-        final X509Certificate clientX509 = CommonUtil.readX509File(URI.create(fhirClient.getX509Location()));
-
-        // iss required https://www.udap.org/udap-jwt-client-auth.html SECTION 4 - iss:
-        // unique identifying URI of the Client Token Service
-        // final String iss = getSubjectAlternativeName(clientX509);
-
         /**
          * NOTE FROM UDAP.org: UDAP Test Tool 1.0.18: Tests 7, 18 and 20 have now been
          * updated accordingly; the 'sub' value of Authentication JWTs must now be set to
@@ -295,9 +291,7 @@ public final class UdapUtil {
      */
     public static <E extends AuthZExtension> Builder appendAuthNExtension(final Builder claimsSetBuilder,
             final E extension) throws JsonProcessingException, ParseException {
-        var claims = claimsSetBuilder.getClaims();
-
-        // final List<AuthZExtension> extensions;
+        Map<String, Object> claims = claimsSetBuilder.getClaims();
 
         try {
             log.debug("AuthZExtension ", extension);
@@ -305,18 +299,11 @@ public final class UdapUtil {
             if (!claims.containsKey("extensions")) {
                 String ext = CommonUtil.getObjectAsJson(extension);
 
-                // List<AuthZExtension> emptyExtensionList = new ArrayList<>();
-
                 claimsSetBuilder.claim("extensions",
                         JSONObjectUtils.parse(ext) /* emptyExtensionList */);
+            } else {
+            	// TODO: Add to existing list of AuthN extensions
             }
-
-            // TODO: Need to fix to handle list of object vs array of object
-            // final Object extensionList = claims.get("extensions");
-            // if (extensionList instanceof List<?>) {
-            // extensions = (List<AuthZExtension>) extensionList;
-            // extensions.add(extension);
-            // }
         } catch (ClassCastException e) {
             log.error("ClassCastException: {}", e);
 
@@ -520,13 +507,7 @@ public final class UdapUtil {
             .toEntity(RegistrationResponse.class)
             .block(Duration.ofMinutes(2));
 
-        HttpStatusCode statusCode = HttpStatus.CONFLICT;
-
-        if (response != null) {
-            statusCode = response.getStatusCode();
-        }
-
-        if (statusCode == HttpStatus.CREATED || statusCode == HttpStatus.OK || statusCode == HttpStatus.ACCEPTED) {
+        if (response != null && response.getStatusCode().is2xxSuccessful()) {
             return response.getBody();
         }
 

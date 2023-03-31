@@ -1,0 +1,3 @@
+rootProject.name = 'udap-spring-boot'
+
+include 'udap-client'

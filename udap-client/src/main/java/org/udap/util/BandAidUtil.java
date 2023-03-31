@@ -20,8 +20,8 @@ public class BandAidUtil {
      */
     public static JWKSet dropKidFromJwkSet(JWKSet jwkSet) {
         for (JWK jwk : jwkSet.getKeys()) {
-            if (jwk instanceof RSAKey rsaKey) {
-                RSAKey.Builder builder = new RSAKey.Builder(rsaKey).keyID(null);
+            if (jwk instanceof RSAKey) {
+                RSAKey.Builder builder = new RSAKey.Builder((RSAKey)jwk).keyID(null);
                 return new JWKSet(builder.build());
             }
         }

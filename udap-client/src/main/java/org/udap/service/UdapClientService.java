@@ -9,6 +9,8 @@ import java.security.cert.CertificateException;
 import java.text.ParseException;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -30,7 +32,6 @@ import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTClaimsSet.Builder;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -74,6 +75,10 @@ public class UdapClientService {
                 | IOException e) {
             log.error("Default JwkSet not loaded", e.getMessage());
         }
+    }
+    
+    public UdapFhirClient getDefaultClient() {
+    	return defaultClient;
     }
 
     /**
