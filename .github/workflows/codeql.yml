@@ -62,7 +62,7 @@ jobs:
         
     # Autobuild attempts to build any compiled languages  (C/C++, C#, Go, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Build with Maven
+    - name: Build with Gradle
       run: gradle build -x test
 
     # ℹ️ Command-line programs to run using the OS shell.
