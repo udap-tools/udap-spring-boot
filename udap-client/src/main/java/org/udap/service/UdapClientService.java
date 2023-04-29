@@ -4,23 +4,16 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.text.ParseException;
 import java.util.List;
 
-import javax.annotation.PostConstruct;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 import org.udap.config.UdapFhirClient;
-import org.udap.config.UdapFhirClientPool;
 import org.udap.model.AccessTokenResponse;
 import org.udap.model.AuthZExtension;
 import org.udap.model.RegistrationResponse;
 import org.udap.model.ServerMetadata;
-import org.udap.util.BandAidUtil;
 import org.udap.util.CommonUtil;
 import org.udap.util.UdapUtil;
 
@@ -45,42 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class UdapClientService {
 
-    @Autowired
-    private UdapFhirClientPool fhirClientPool;
-
-    private UdapFhirClient defaultClient;
-
-    private JWKSet defaultPrivateJwkSet;
-
-    @PostConstruct
-    private void postConstruct() {
-        Assert.notNull(fhirClientPool, "Missing fhirClientPool");
-        Assert.notNull(fhirClientPool.getFhirClients(), "Missing fhirClientPool list");
-        Assert.isTrue(!fhirClientPool.getFhirClients().isEmpty(), "fhirClientPool empty");
-
-        // Use first UDAP - FHIR Client for now
-        defaultClient = fhirClientPool.getFhirClients().get(0);
-
-        // UDAP Client - Private Key
-        final URI privateKeyLocation = URI.create(defaultClient.getPrivateKeyLocation());
-        try {
-            defaultPrivateJwkSet = CommonUtil.getJwkSetFromPkcs12(privateKeyLocation,
-                    defaultClient.getPrivateKeySecret().toCharArray());
-
-            // Temp fix for Dan's token endpoint
-            defaultPrivateJwkSet = BandAidUtil.dropKidFromJwkSet(defaultPrivateJwkSet);
-
-            log.info("default - private JwkSet loaded");
-        } catch (UnrecoverableKeyException | KeyStoreException | NoSuchAlgorithmException | CertificateException
-                | IOException e) {
-            log.error("Default JwkSet not loaded", e.getMessage());
-        }
-    }
-    
-    public UdapFhirClient getDefaultClient() {
-    	return defaultClient;
-    }
-
     /**
      * Registers the default UDAP client at the given authorization server. Also performs
      * necessary checks on server metadata to ensure server is trusted
@@ -89,13 +46,20 @@ public class UdapClientService {
      * @param udapVersion
      * @return RegistrationResponse
      */
-    public RegistrationResponse register(final String authorizationServer, final String expectedMetadataIssuer,
+    public RegistrationResponse register(final UdapFhirClient fhirClient, 
+    		final String authorizationServer, final String expectedMetadataIssuer,
             final String udapVersion, final boolean mustBeTrusted) {
+    	
         // TODO: Create service that caches information on trusted servers with
         // configurable "re-validate" intervals
         final ServerMetadata serverMetadata = UdapUtil.getServerMetadata(authorizationServer);
         boolean isServerTrusted;
         try {
+            // UDAP Client - Private Key
+            final URI privateKeyLocation = URI.create(fhirClient.getPrivateKeyLocation());
+            final JWKSet privateJwkSet = CommonUtil.getJwkSetFromPkcs12(privateKeyLocation,
+            		fhirClient.getPrivateKeySecret().toCharArray());
+                
             if (mustBeTrusted) {
                 isServerTrusted = UdapUtil.isServerMetadataTrusted(serverMetadata, expectedMetadataIssuer,
                         JWSAlgorithm.RS256);
@@ -105,11 +69,11 @@ public class UdapClientService {
             }
 
             if (isServerTrusted) {
-                return UdapUtil.registerClient(defaultClient, serverMetadata, udapVersion, defaultPrivateJwkSet);
+                return UdapUtil.registerClient(fhirClient, serverMetadata, udapVersion, privateJwkSet);
             } else {
                 log.error(authorizationServer + " is not trusted");
             }
-        } catch (ParseException | CertificateException | IOException | BadJOSEException | JOSEException e) {
+        } catch (ParseException | CertificateException | IOException | BadJOSEException | JOSEException | KeyStoreException | NoSuchAlgorithmException e) {
             log.error("UDAP Registration Error: {}", e.getMessage());
         }
 
@@ -123,13 +87,20 @@ public class UdapClientService {
      * @param authNExtensionList
      * @return
      */
-    public AccessTokenResponse getAccessToken(final String authorizationServer, final String expectedMetadataIssuer,
+    public AccessTokenResponse getAccessToken(final UdapFhirClient fhirClient, 
+    		final String authorizationServer, final String expectedMetadataIssuer, final String scope,
             final List<AuthZExtension> authNExtensionList, final boolean mustBeTrusted) {
+    	
         // TODO: Create service that caches information on trusted servers with
         // configurable "re-validate" intervals
         final ServerMetadata serverMetadata = UdapUtil.getServerMetadata(authorizationServer);
         final boolean isServerTrusted;
         try {
+            // UDAP Client - Private Key
+            final URI privateKeyLocation = URI.create(fhirClient.getPrivateKeyLocation());
+            final JWKSet privateJwkSet = CommonUtil.getJwkSetFromPkcs12(privateKeyLocation,
+            		fhirClient.getPrivateKeySecret().toCharArray());
+            
             if (mustBeTrusted) {
                 isServerTrusted = UdapUtil.isServerMetadataTrusted(serverMetadata, expectedMetadataIssuer,
                         JWSAlgorithm.RS256);
@@ -142,7 +113,7 @@ public class UdapClientService {
                 String tokenEndPoint = serverMetadata.getTokenEndpoint();
 
                 // http://hl7.org/fhir/us/udap-security/b2b.html#constructing-authentication-token
-                Builder authNTokenBuilder = UdapUtil.createAuthNToken(defaultClient, tokenEndPoint);
+                Builder authNTokenBuilder = UdapUtil.createAuthNToken(fhirClient, tokenEndPoint);
 
                 // Attach available authorization extensions to access token request
                 for (AuthZExtension extension : authNExtensionList) {
@@ -153,17 +124,17 @@ public class UdapClientService {
                 JWTClaimsSet authNClaims = authNTokenBuilder.build();
 
                 // http://hl7.org/fhir/us/udap-security/b2b.html#client-credentials-grants
-                JWSObject authNToken = UdapUtil.createJwtWithSignature(authNClaims, defaultPrivateJwkSet,
+                JWSObject authNToken = UdapUtil.createJwtWithSignature(authNClaims, privateJwkSet,
                         JWSAlgorithm.RS256);
 
                 log.info("AuthN Token: " + authNToken.serialize());
 
-                return UdapUtil.getAccessToken(authNToken, tokenEndPoint);
+                return UdapUtil.getAccessToken(authNToken, tokenEndPoint, scope);
 
             } else {
                 log.error(authorizationServer + " is not trusted");
             }
-        } catch (ParseException | CertificateException | IOException | BadJOSEException | JOSEException e) {
+        } catch (ParseException | IOException | BadJOSEException | JOSEException | KeyStoreException | NoSuchAlgorithmException | CertificateException e) {
             log.error("UDAP error getting access token: {}", e.getMessage());
         }
 

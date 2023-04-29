@@ -2,6 +2,8 @@ package org.udap.util;
 
 import java.io.IOException;
 import java.net.URI;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
@@ -111,7 +113,7 @@ public final class UdapUtil {
 
         return null;
     }
-
+    
     /**
      * Create client's software statement to-be incorporated into the clients trusted
      * dynamic client registration request
@@ -240,8 +242,7 @@ public final class UdapUtil {
      * @throws IOException
      * @throws CertificateParsingException
      */
-    public static Builder createAuthNToken(final UdapFhirClient fhirClient, final String audience)
-            throws IOException, CertificateParsingException {
+    public static Builder createAuthNToken(final UdapFhirClient fhirClient, final String audience) {
         /**
          * NOTE FROM UDAP.org: UDAP Test Tool 1.0.18: Tests 7, 18 and 20 have now been
          * updated accordingly; the 'sub' value of Authentication JWTs must now be set to
@@ -340,17 +341,7 @@ public final class UdapUtil {
         Assert.notNull(serverMetadata, "serverMetadata cannot be null");
         Assert.notNull(metadataClaimsSet, "metadataClaimsSet cannot be null");
 
-        // TODO: Account for when authorizationCode is required based on the nature of
-        // FHIR Client
-        if (serverMetadata.getRegistrationEndpoint() == null 
-              // || serverMetadata.getAuthorizationEndpoint() == null
-              || serverMetadata.getTokenEndpoint() == null) {
-            log.warn("Server metadata has null endpoints; not trusted");
-            return false;
-        }
-
-        // final String authorizationEndpoint =
-        // metadataClaimsSet.getStringClaim("authorization_endpoint");
+        // final String authorizationEndpoint = metadataClaimsSet.getStringClaim("authorization_endpoint");
         final String registrationEndpoint = metadataClaimsSet.getStringClaim("registration_endpoint");
         final String tokenEndpoint = metadataClaimsSet.getStringClaim("token_endpoint");
         if (/* authorizationEndpoint == null || */registrationEndpoint == null || tokenEndpoint == null) {
@@ -379,6 +370,7 @@ public final class UdapUtil {
 
         JWTClaimsSet serverMetadataClaimsSet = getClaimsFromSignedServerMetadata(serverMetadata.getSignedMetadata(),
                 expectedIssuer, jwsAlg);
+        
         return isServerMetadataTrusted(serverMetadata, serverMetadataClaimsSet);
     }
 
@@ -430,7 +422,7 @@ public final class UdapUtil {
          * DefaultJWTClaimsVerifier:
          * https://www.javadoc.io/doc/com.nimbusds/nimbus-jose-jwt/latest/com/nimbusds/jwt/proc/DefaultJWTClaimsVerifier.html
          */
-        jwtProcessor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier(
+        jwtProcessor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(
                 new JWTClaimsSet.Builder().issuer(requiredIssuer).build(), SERVER_METADATA_CLAIMS));
 
         return jwtProcessor.process(signedMetadata, null /* Optional SecurityContext */);
@@ -520,13 +512,13 @@ public final class UdapUtil {
      * @param tokenEndpoint
      * @return
      */
-    public static AccessTokenResponse getAccessToken(final JWSObject authNToken, final String tokenEndpoint) {
+    public static AccessTokenResponse getAccessToken(final JWSObject authNToken, final String tokenEndpoint, final String scope) {
         TokenRequestClientCredentialsGrant authNTokenRequest = TokenRequestClientCredentialsGrant.builder()
             .grantType("client_credentials")
             .clientAssertionType(URI.create("urn:ietf:params:oauth:client-assertion-type:jwt-bearer"))
             .clientAssertion(authNToken.serialize())
             // TODO: pass as parameter
-            .scope("system/USCoreR4.read")
+            .scope(scope)
             .udap("1")
             .build();
 

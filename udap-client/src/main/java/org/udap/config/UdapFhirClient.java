@@ -3,6 +3,8 @@ package org.udap.config;
 import java.net.URI;
 import java.util.List;
 
+import com.nimbusds.jose.jwk.JWKSet;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -58,6 +60,11 @@ public class UdapFhirClient {
      * Private key secret TODO: Support secret vaulting
      */
     private String privateKeySecret;
+    
+    /**
+     * JWK Set created from private key located as the privateKeyLocation
+     */
+    private JWKSet privateJwkSet;
 
     /**
      * STU1 - SHALL be no more than 5 minutes (expressed in seconds)
