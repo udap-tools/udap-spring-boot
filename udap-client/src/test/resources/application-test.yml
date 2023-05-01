@@ -2,14 +2,14 @@ spring:
   config:
     activate:
       on-profile: test
-name: fhir-client-udap-test
+name: udap-fhir-client-test
 environment: test
 enabled: true
-fhir-client-default: Test FHIR Client
+fhir-client-default: Test UDAP FHIR Client
 fhir-clients:
    -
       # Nick name is short reference identifer to locate client in list
-      client-nickname: Test FHIR Client
+      client-nickname: Test UDAP FHIR Client
       
       ############################################
       # UDAP Client Software Statement Defaults
@@ -17,14 +17,12 @@ fhir-clients:
       client-name: FHIR UDAP Client Test (Springboot)
       redirect-uris: ~
       contacts:
-         - 'mailto:bstring.slc@gmail.com'
-      logoUri: https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png
+         - 'mailto:some.contact@example.com'
+      logoUri: ${UDAP_TEST_FHIR_CLIENT_LOGO_URI}
       grant-types:
          - client_credentials
       scopes:
-         #- iops/USCoreR4.read
-         - system/USCoreR4.read
-         #- system/Procedures.read         
+         - system/Procedures.read         
       response-types: ~
       token-endpoint-auth-method: private_key_jwt
       ##########
