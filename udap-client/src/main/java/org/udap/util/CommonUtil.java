@@ -20,14 +20,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.PasswordLookup;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.X509CertUtils;
 
 /**
  *
- * Common Utility helper methods. Some methods maybe pruned in the future based on how
- * their usefulness takes shape in future testing
+ * Common Utility helper methods. Some methods maybe pruned / refined further
+ * depending on their usefulness
  *
  * @author Brett P Stringham
  *
@@ -54,7 +53,7 @@ public class CommonUtil {
         // Retrieve public key as RSA JWK
         return RSAKey.parse(x509Cert);
     }
-
+    
     /**
      * For now -- assumes a single private key at the location provided by the URI
      * @param privateKeyUri
@@ -98,7 +97,7 @@ public class CommonUtil {
      * @throws UnrecoverableKeyException
      */
     public static JWKSet getJwkSetFromPkcs12(URI privateKeyUri, char[] privateKeySecret) throws KeyStoreException,
-            IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+            IOException, NoSuchAlgorithmException, CertificateException {
         final KeyStore keystore = KeyStore.getInstance("PKCS12");
 
         final Path keyPath = Paths.get(privateKeyUri);
@@ -106,12 +105,7 @@ public class CommonUtil {
         try (FileInputStream ks = new FileInputStream(keyPath.toFile())) {
             keystore.load(ks, privateKeySecret);
 
-            return JWKSet.load(keystore, new PasswordLookup() {
-                @Override
-                public char[] lookupPassword(final String name) {
-                    return privateKeySecret;
-                }
-            });
+            return JWKSet.load(keystore, (final String name) -> privateKeySecret);
         }
     }
 

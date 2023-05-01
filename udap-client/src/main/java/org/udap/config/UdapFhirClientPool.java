@@ -30,5 +30,4 @@ public class UdapFhirClientPool {
      * UDAP FHIR Clients - support more that one client in this reference
      */
     private List<UdapFhirClient> fhirClients;
-
 }

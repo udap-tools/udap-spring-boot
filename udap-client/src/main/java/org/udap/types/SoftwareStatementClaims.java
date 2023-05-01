@@ -1,7 +1,7 @@
 package org.udap.types;
 
 /**
- * TODO: Put in place to prune of burned st
+ * TODO: Cleanup and implement
  *
  * JWT claim names used to produce a FHIR client's signed software statement that will be
  * included as part of Trusted Dynamic Client Registration action performed at the FHIR

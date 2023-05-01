@@ -1,0 +1,57 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+name: udap-fhir-client-test
+environment: test
+enabled: true
+fhir-client-default: Test UDAP FHIR Client
+fhir-clients:
+   -
+      # Nick name is short reference identifer to locate client in list
+      client-nickname: Test UDAP FHIR Client
+      
+      ############################################
+      # UDAP Client Software Statement Defaults
+      ############################################
+      client-name: FHIR UDAP Client Test (Springboot)
+      redirect-uris: ~
+      contacts:
+         - 'mailto:some.contact@example.com'
+      logoUri: ${UDAP_TEST_FHIR_CLIENT_LOGO_URI}
+      grant-types:
+         - client_credentials
+      scopes:
+         - system/Procedures.read         
+      response-types: ~
+      token-endpoint-auth-method: private_key_jwt
+      ##########
+      
+      # STU1 - SHALL be no more than 5 minutes (expressed in seconds)
+      software-statement-ttl: 300
+      
+      # STU1 - SHALL be not more than 5 miutes (expressed in seconds)
+      auth-n-token-ttl: 300
+      
+      # Populated for those tests where client has already registered with the authorization server
+      client-id: ${UDAP_TEST_FHIR_CLIENT_ID}            
+         
+      # Clients x509 Certificate Location
+      x509-location: ${UDAP_TEST_FHIR_CLIENT_X509_LOCATION}
+      
+      # Client's Private key location
+      private-key-location: ${UDAP_TEST_FHIR_CLIENT_PRIVATE_KEY_LOCATION}
+      
+      # Client's Private Key Secret
+      # In a production scenario such secrets would be handled by some vaulting mechanism
+      private-key-secret: ${UDAP_TEST_FHIR_CLIENT_PRIVATE_KEY_SECRET}
+      
+      # Used in integration tests -- where a DEMO client certificate has been supplied
+      # "CN=https://sandbox.udap.org/client-apps/brettstringham,OU=UDAP Test Certificate NOT FOR USE WITH PHI,O=Brett Stringham (self asserted)"
+      integration-test-x509-princple-name-expected: ${UDAP_TEST_FHIR_CLIENT_INTEGRATION_TEST_X509_PRINCPLE_NAME_EXPECTED}
+      
+      # Used in tntegration tests -- where a DEMO client certificate has been supplied
+      # Expected subject alternative name on test certificate
+      # "https://sandbox.udap.org/client-apps/brettstringham"
+      integration-test-x509-san-expected: ${UDAP_TEST_FHIR_CLIENT_INTEGRATION_TEST_X509_SAN_EXPECTED}
+      
