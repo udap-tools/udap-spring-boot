@@ -3,15 +3,16 @@ package org.udap.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * @author Brett P Stringham
  *
  */
 @Data
+@EqualsAndHashCode(callSuper=false)
 @Builder
 public class AuthZExtensionHl7B2bHeader extends AuthZExtension {
     @JsonInclude(Include.NON_NULL)

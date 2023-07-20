@@ -1,9 +1,9 @@
 package org.udap.exception;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * Place holder - to be refined as robust error and exception handling is put in place.
@@ -13,6 +13,7 @@ import lombok.Data;
  */
 @AllArgsConstructor
 @Data
+@EqualsAndHashCode(callSuper=false)
 public class UdapException extends Exception {
 
     private static final long serialVersionUID = 1L;
