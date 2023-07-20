@@ -27,7 +27,7 @@ dependencies {
   implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
   implementation 'com.nimbusds:nimbus-jose-jwt:9.31'
   
-  compileOnly 'org.projectlombok:lombok'
+  implementation 'org.projectlombok:lombok'
   runtimeOnly 'org.springframework.boot:spring-boot-devtools'
   annotationProcessor 'org.projectlombok:lombok'
   
