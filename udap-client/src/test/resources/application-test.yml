@@ -8,7 +8,7 @@ enabled: true
 fhir-client-default: Test UDAP FHIR Client
 fhir-clients:
    -
-      # Nickname is short reference identifer to locate client in list
+      # Nickname is short reference identifier to locate client in list
       client-nickname: Test UDAP FHIR Client
       
       ############################################
