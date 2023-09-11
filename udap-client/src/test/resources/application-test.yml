@@ -8,7 +8,7 @@ enabled: true
 fhir-client-default: Test UDAP FHIR Client
 fhir-clients:
    -
-      # Nick name is short reference identifer to locate client in list
+      # Nickname is short reference identifier to locate client in list
       client-nickname: Test UDAP FHIR Client
       
       ############################################
@@ -30,7 +30,7 @@ fhir-clients:
       # STU1 - SHALL be no more than 5 minutes (expressed in seconds)
       software-statement-ttl: 300
       
-      # STU1 - SHALL be not more than 5 miutes (expressed in seconds)
+      # STU1 - SHALL be not more than 5 minutes (expressed in seconds)
       auth-n-token-ttl: 300
       
       # Populated for those tests where client has already registered with the authorization server

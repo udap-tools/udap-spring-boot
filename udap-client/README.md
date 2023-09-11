@@ -1,8 +1,3 @@
-# UDAP Client Service - Springboot
-	- Current state: Simplistic UDAP Client for b2b scenarios to get the ball rolling
-	- Target state: UDAP client - Spring Boot Starter
-	
-
 # Getting Started
 - To leverage the UDAP Test Tool, you must be issued a "UDAP Test Certificate NOT FOR USE WITH PHI" for your FHIR CLIENT APP
 - https://www.udap.org/UDAPTestTool/
@@ -21,6 +16,7 @@ UDAP_DEMO_FHIR_CLIENT_INTEGRATION_TEST_X509_SAN_EXPECTED=https://sandbox.udap.or
 UDAP_DEMO_FHIR_CLIENT_PRIVATE_KEY_LOCATION=file:/home/<user>/.udap/udap-sandbox-abc-developer.p12
 UDAP_DEMO_FHIR_CLIENT_PRIVATE_KEY_SECRET=************
 UDAP_DEMO_FHIR_CLIENT_X509_LOCATION=file:/home/<user>/.udap/udap-sandbox-abc-developer.crt
+UDAP_TEST_FHIR_CLIENT_LOGO_URI=https://build.fhir.org/ig/HL7/fhir-udap-security-ig/assets/images/udap_logo.png
 ```
 
 # UDAP Client (Spring Boot) - B2B (client credentials grant)
